@@ -2,9 +2,11 @@
 #
 # A *bookmark server* or URI shortener.
 
-import http.server
 import os 
 import requests
+import http.server
+import threading
+from SocketServer import ThreadingMixIn
 from urllib.parse import unquote, parse_qs
 
 memory = {}
@@ -28,6 +30,8 @@ form = '''<!DOCTYPE html>
 </pre>
 '''
 
+class ThreadHTTPServer(ThreadingMixIn, http.server.HTTPServer):
+    "This is a HTTP Server that supports threading."
 
 def CheckURI(uri, timeout=5):
     '''Check whether this URI is reachable, i.e. does it return a 200 OK?
@@ -109,5 +113,5 @@ class Shortener(http.server.BaseHTTPRequestHandler):
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8001))   # Use PORT if it's there.
     server_address = ('', port)
-    httpd = http.server.HTTPServer(server_address, Shortener)
+    httpd = ThreadHTTPServer(server_address, Shortener)
     httpd.serve_forever()
